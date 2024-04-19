@@ -1,8 +1,8 @@
 from geopy import distance, point
 
 class Coordinates:
-    def __init__(self):
-        self.coordinates = None
+    def __init__(self, latitude: float, longitude: float):
+        self.coordinates = (latitude, longitude)
 
     @property
     def coordinates(self):
@@ -16,10 +16,9 @@ class Coordinates:
         else:
             raise ValueError("Latitude or longitude is out of valid range")
 
-    def check_if_in_geofence(self, other_coordinates: tuple[float, float], radius: float) -> bool:
-        return distance.distance(point.Point(self.coordinates), point.Point(other_coordinates)).meters <= radius
+    def check_if_in_geofence(self, centre_coordinates: tuple[float, float], radius: float) -> bool:
+        return distance.distance(point.Point(self.coordinates), point.Point(centre_coordinates)).meters <= radius
     
-    @staticmethod
-    def get_coordinates():
-        ...
-        return (13.032, 77.567)
+    @classmethod
+    def get_current_coordinates(cls):
+        return cls(13.032, 77.567)
