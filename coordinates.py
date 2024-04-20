@@ -15,6 +15,8 @@ class Coordinates:
             self._coordinates = (latitude, longitude)
         else:
             raise ValueError("latitude or longitude is out of valid range")
+        
+        # Note to server-side coder: This validation of coordinates is not a good practice because it is being done in the server side and I will be removing this validation and transferring it to the client-side JS functions.
 
     def check_if_in_geofence(self, centre_coordinates: tuple[float, float], radius: float) -> bool:
         return distance.distance(point.Point(self.coordinates), point.Point(centre_coordinates)).meters <= radius
