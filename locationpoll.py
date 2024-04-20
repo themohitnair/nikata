@@ -1,5 +1,4 @@
 from geopy import distance, point
-from coordinates import Coordinates
 import time
 
 
@@ -14,11 +13,12 @@ import time
 
 class Client:
     def __init__(self):
-        self.pstate = False
+        self.pstate: bool = False
         self.state: bool = None
-        self.coordinates = Coordinates.get_current_coordinates()
-        self.radius = Client.get_radius()
-        self.unames = Client.get_unames()
+        self.centre: tuple[float, float] = Client.get_centre()
+        self.coordinates: tuple[float, float] = Client.get_current_coordinates()
+        self.radius: int = Client.get_radius()
+        self.unames: list[str] = Client.get_unames()
 
     @property 
     def radius(self):
@@ -26,20 +26,16 @@ class Client:
     
     @radius.setter
     def radius(self, radius):
-        if radius <= 1500000:
-            self._radius = radius
-        else:
-            raise ValueError("radius is out of valid range (1.5 million meters)") #1.5 million meters is an approximation of the half of the East-West extent of the Republic of India lol
-    # Note to server-side coder: This validation of radius is not a good practice because it is being done in the server side and I will be removing this validation and transferring it to the client-side JS functions.
+        self._radius = radius
 
-    @classmethod
+    @staticmethod
     def get_radius():
-        radius = 139 
+        radius = 139 # placeholder
         # insert radius extraction logic from json payload sent by app
         return radius
 
-    def change_state(self, centre: tuple[float, float], radius: float):
-        if self.coordinates.check_if_in_geofence(centre, radius):
+    def change_state(self):
+        if self.check_if_in_geofence():
             self.state = True
             print("State True: inside geofence") 
         else: 
@@ -51,19 +47,36 @@ class Client:
             self.pstate = self.state
         else:
             pass
+
+    @staticmethod
+    def get_centre() -> tuple[float, float]:
+        latitude = 13.031009729710282 # placeholder values
+        longitude = 77.56534607566735 # placeholder values
+        # insert centre extraction logic from json payload sent by app
+        return (latitude, longitude)
     
-    @classmethod
-    def get_unames():
+    @staticmethod
+    def get_unames() -> list[str]:
         unames = []
         # insert username extraction logic from json payload sent by app
         return unames
     # have not made unames a property because I will not validate it in server-side code. The usernames will be validated by JS in the client-side
+
+    @staticmethod
+    def get_current_coordinates() -> tuple[float, float]:
+        # insert extraction logic from app payload to the server
+        latitude = 13.030510693670998 # placeholder value for latitude: within the geofence so the location polling changes state
+        longitude = 77.5653442911208 # placeholder value for longitude: within the geofence so the location polling changes state
+        return (latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates()
+    
+    def check_if_in_geofence(self) -> bool:
+        return distance.distance(point.Point(self.coordinates), point.Point(self.centre)).meters <= self.radius
         
 
 def main():    
     client = Client()
     while True:        
-        client.change_state(client.coordinates.coordinates, client.radius)
+        client.change_state()
         client.trigger()
         time.sleep(20)
 
