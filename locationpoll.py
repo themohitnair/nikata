@@ -17,6 +17,26 @@ class Client:
         self.pstate = False
         self.state: bool = None
         self.coordinates = Coordinates.get_current_coordinates()
+        self.radius = Client.get_radius()
+
+    @property 
+    def radius(self):
+        return self._radius
+    
+    @radius.setter
+    def radius(self, radius):
+        if radius <= 1500000:
+            self._radius = radius
+        else:
+            raise ValueError("radius is out of valid range (1.5 million meters)") #1.5 million meters is an approximation of the half of the East-West extent of the Republic of India lol
+
+
+    @classmethod
+    def get_radius():
+        ...
+        radius = 139 
+        # insert radius extraction logic from json payload sent by app
+        return radius
 
     def change_state(self, centre: tuple[float, float], radius: float):
         if self.coordinates.check_if_in_geofence(centre, radius):
@@ -35,9 +55,9 @@ class Client:
 def main():    
     client = Client()
     while True:        
-        client.change_state(client.coordinates.coordinates, 139)
+        client.change_state(client.coordinates.coordinates, client.radius)
         client.trigger()
-        time.sleep(10)
+        time.sleep(20)
 
 if __name__ == "__main__":
     main()

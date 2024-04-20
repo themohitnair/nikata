@@ -14,11 +14,14 @@ class Coordinates:
         if -90 <= latitude <= 90 and -180 <= longitude <= 180:
             self._coordinates = (latitude, longitude)
         else:
-            raise ValueError("Latitude or longitude is out of valid range")
+            raise ValueError("latitude or longitude is out of valid range")
 
     def check_if_in_geofence(self, centre_coordinates: tuple[float, float], radius: float) -> bool:
         return distance.distance(point.Point(self.coordinates), point.Point(centre_coordinates)).meters <= radius
     
     @classmethod
     def get_current_coordinates(cls):
-        return cls(13.032, 77.567)
+        # insert extraction logic from app payload to the server
+        latitude = 13.030510693670998 # placeholder value for latitude: within the geofence so the location polling changes state
+        longitude = 77.5653442911208 # placeholder value for longitude: within the geofence so the location polling changes state
+        return cls(latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates()
