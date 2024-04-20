@@ -47,7 +47,7 @@ class Client:
 
     def trigger(self):
         if self.pstate != self.state:
-            print("notify")
+            print("notify") # notification function (telegram part)
             self.pstate = self.state
         else:
             pass
