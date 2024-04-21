@@ -19,6 +19,7 @@ class Client:
         self.coordinates: tuple[float, float] = Client.get_current_coordinates()
         self.radius: int = Client.get_radius()
         self.unames: list[str] = Client.get_unames()
+        self.geoname: str = Client.get_geoname()
 
     @property 
     def radius(self):
@@ -47,6 +48,12 @@ class Client:
             self.pstate = self.state
         else:
             pass
+
+    @staticmethod
+    def get_geoname() -> str:
+        #insert geofence name extraction logic from json payload sent by app
+        geoname = "Ramaiah Institute of Technology" #placeholder value
+        return geoname
 
     @staticmethod
     def get_centre() -> tuple[float, float]:
