@@ -1,5 +1,13 @@
 from geopy import distance, point
 import time
+import threading
+import telebot
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
+nikbot = telebot.TeleBot(TOKEN)
 
 
 # college_centre = 13.031009729710282, 77.56534607566735 
@@ -13,6 +21,7 @@ import time
 
 class Client:
     def __init__(self):
+        self.name: str = Client.get_name()
         self.pstate: bool = False
         self.state: bool = None
         self.centre: tuple[float, float] = Client.get_centre()
@@ -21,33 +30,39 @@ class Client:
         self.unames: list[str] = Client.get_unames()
         self.geoname: str = Client.get_geoname()
 
-    @property 
-    def radius(self):
-        return self._radius
-    
-    @radius.setter
-    def radius(self, radius):
-        self._radius = radius
-
-    @staticmethod
-    def get_radius():
-        radius = 139 # placeholder
-        # insert radius extraction logic from json payload sent by app
-        return radius
-
-    def change_state(self):
+    def change_state(self) -> None:
         if self.check_if_in_geofence():
             self.state = True
             print("State True: inside geofence") 
         else: 
             self.state = False
 
-    def trigger(self):
+    def trigger(self) -> None:
         if self.pstate != self.state:
-            print("notify") # notification function (telegram part)
+            self.notify()
             self.pstate = self.state
         else:
             pass
+
+    def check_if_in_geofence(self) -> bool:
+        return distance.distance(point.Point(self.coordinates), point.Point(self.centre)).meters <= self.radius
+    
+    def notify(self) -> None:
+        message = f"{self.name} has {'entered' if self.state else 'exited'} {self.geoname}"
+        for uname in self.unames:
+            nikbot.send_message(uname, message)
+    
+    @staticmethod
+    def get_name() -> str:
+        name = "gandu"
+        # insert name extraction logic from json payload sent by app
+        return name
+
+    @staticmethod
+    def get_radius() -> int:
+        radius = 139 # placeholder
+        # insert radius extraction logic from json payload sent by app
+        return radius    
 
     @staticmethod
     def get_geoname() -> str:
@@ -64,7 +79,7 @@ class Client:
     
     @staticmethod
     def get_unames() -> list[str]:
-        unames = []
+        unames = ['1437818332']
         # insert username extraction logic from json payload sent by app
         return unames
     # have not made unames a property because I will not validate it in server-side code. The usernames will be validated by JS in the client-side
@@ -74,11 +89,9 @@ class Client:
         # insert extraction logic from app payload to the server
         latitude = 13.030510693670998 # placeholder value for latitude: within the geofence so the location polling changes state
         longitude = 77.5653442911208 # placeholder value for longitude: within the geofence so the location polling changes state
-        return (latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates()
-    
-    def check_if_in_geofence(self) -> bool:
-        return distance.distance(point.Point(self.coordinates), point.Point(self.centre)).meters <= self.radius
-        
+        return (latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates() 
+
+
 
 def main():    
     client = Client()
@@ -87,8 +100,11 @@ def main():
         client.trigger()
         time.sleep(20)
 
+
+
 if __name__ == "__main__":
     main()
+    
 
     
     
