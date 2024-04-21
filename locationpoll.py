@@ -52,7 +52,7 @@ class Client:
             try:                
                 nikbot.send_message(chatid, message)
             except telebot.apihelper.ApiTelegramException:
-                continue
+                continue # might filter uninitiated chatIDs in client side later
     
     @staticmethod
     def get_name() -> str:
