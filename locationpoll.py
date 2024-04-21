@@ -19,15 +19,18 @@ nikbot = telebot.TeleBot(TOKEN)
 
 
 class Client:
-    def __init__(self):
-        self.name: str = Client.get_name()
+    def __init__(self, request_body: dict = None):
+        if request_body is None:
+            raise ValueError("Request body not supplied")
+
+        self.name = request_body.get('name')
         self.pstate: bool = False
         self.state: bool | None = None
-        self.centre: tuple[float, float] = Client.get_centre()
-        self.coordinates: tuple[float, float] = Client.get_current_coordinates()
-        self.radius: int = Client.get_radius()
-        self.chatids: list[str] = Client.get_chatids()
-        self.geoname: str = Client.get_geoname()
+        self.centre: tuple[float, float] = request_body.get('center_coordinates')
+        self.coordinates: tuple[float, float] = request_body.get('curr_coordinates')
+        self.radius: int = request_body.get('radius')
+        self.chat_ids: list[str] = request_body.get('chat_ids')
+        self.geoname: str = request_body.get('geoname')
 
     def change_state(self) -> None:
         if self.check_if_in_geofence():
@@ -48,50 +51,11 @@ class Client:
     
     def notify(self) -> None:
         message = f"{self.name} has {'entered' if self.state else 'exited'} {self.geoname}"
-        for chatid in self.chatids:
+        for chatid in self.chat_ids:
             try:                
                 nikbot.send_message(chatid, message)
             except telebot.apihelper.ApiTelegramException:
                 continue # might filter uninitiated chatIDs in client side later
-    
-    @staticmethod
-    def get_name() -> str:
-        name = "gandu"
-        # insert name extraction logic from json payload sent by app
-        return name
-
-    @staticmethod
-    def get_radius() -> int:
-        radius = 139 # placeholder
-        # insert radius extraction logic from json payload sent by app
-        return radius    
-
-    @staticmethod
-    def get_geoname() -> str:
-        #insert geofence name extraction logic from json payload sent by app
-        geoname = "Ramaiah Institute of Technology" #placeholder value
-        return geoname
-
-    @staticmethod
-    def get_centre() -> tuple[float, float]:
-        latitude = 13.031009729710282 # placeholder values
-        longitude = 77.56534607566735 # placeholder values
-        # insert centre extraction logic from json payload sent by app
-        return (latitude, longitude)
-    
-    @staticmethod
-    def get_chatids() -> list[str]:
-        chatids = ['1437818332']
-        # insert chatID extraction logic from json payload sent by app
-        return chatids
-        # have not made unames a property because I will not validate it in server-side code. The usernames will be validated by JS in the client-side
-
-    @staticmethod
-    def get_current_coordinates() -> tuple[float, float]:
-        # insert extraction logic from app payload to the server
-        latitude = 13.030510693670998 # placeholder value for latitude: within the geofence so the location polling changes state
-        longitude = 77.5653442911208 # placeholder value for longitude: within the geofence so the location polling changes state
-        return (latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates() 
 
 
 # placeholder main: to be implemented in server
@@ -101,7 +65,6 @@ def main():
         client.change_state()
         client.trigger()
         time.sleep(20)
-
 
 
 if __name__ == "__main__":
