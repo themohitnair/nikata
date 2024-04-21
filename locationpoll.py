@@ -1,6 +1,5 @@
 from geopy import distance, point
 import time
-import threading
 import telebot
 from dotenv import load_dotenv
 import os
@@ -27,7 +26,7 @@ class Client:
         self.centre: tuple[float, float] = Client.get_centre()
         self.coordinates: tuple[float, float] = Client.get_current_coordinates()
         self.radius: int = Client.get_radius()
-        self.unames: list[str] = Client.get_unames()
+        self.chatids: list[str] = Client.get_chatids()
         self.geoname: str = Client.get_geoname()
 
     def change_state(self) -> None:
@@ -49,8 +48,11 @@ class Client:
     
     def notify(self) -> None:
         message = f"{self.name} has {'entered' if self.state else 'exited'} {self.geoname}"
-        for uname in self.unames:
-            nikbot.send_message(uname, message)
+        for chatid in self.chatids:
+            try:                
+                nikbot.send_message(chatid, message)
+            except telebot.apihelper.ApiTelegramException:
+                continue
     
     @staticmethod
     def get_name() -> str:
@@ -78,11 +80,11 @@ class Client:
         return (latitude, longitude)
     
     @staticmethod
-    def get_unames() -> list[str]:
-        unames = ['1437818332']
-        # insert username extraction logic from json payload sent by app
-        return unames
-    # have not made unames a property because I will not validate it in server-side code. The usernames will be validated by JS in the client-side
+    def get_chatids() -> list[str]:
+        chatids = ['1437818332']
+        # insert chatID extraction logic from json payload sent by app
+        return chatids
+        # have not made unames a property because I will not validate it in server-side code. The usernames will be validated by JS in the client-side
 
     @staticmethod
     def get_current_coordinates() -> tuple[float, float]:
@@ -92,7 +94,7 @@ class Client:
         return (latitude, longitude) # returns a coordinates object, used by the client class; a coordinates object is created every 20 seconds by the loop by get_current_coordinates() 
 
 
-
+# placeholder main: to be implemented in server
 def main():    
     client = Client()
     while True:        
