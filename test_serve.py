@@ -15,7 +15,7 @@ class CoordinatesInput(BaseModel):
     geoname: str
 
 
-@app.post("/name-this-pls/")
+@app.post("/adopt-info/")
 async def process_coordinates(user_info: CoordinatesInput):
     request_body = user_info.dict()
     name = request_body.pop('name')
@@ -31,4 +31,4 @@ async def process_coordinates(user_info: CoordinatesInput):
 
     # more to be done here
     # tbd later
-    return {"message": "success yay"}
+    return {"message": "success yay"} #tbd if success message is even required; depends on client-side verification of telegram chatIDs
