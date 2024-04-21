@@ -23,7 +23,7 @@ class Client:
     def __init__(self):
         self.name: str = Client.get_name()
         self.pstate: bool = False
-        self.state: bool = None
+        self.state: bool | None = None
         self.centre: tuple[float, float] = Client.get_centre()
         self.coordinates: tuple[float, float] = Client.get_current_coordinates()
         self.radius: int = Client.get_radius()
