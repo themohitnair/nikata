@@ -35,7 +35,6 @@ class Client:
     def change_state(self) -> None:
         if self.check_if_in_geofence():
             self.state = True
-            print("State True: inside geofence") 
         else: 
             self.state = False
 
