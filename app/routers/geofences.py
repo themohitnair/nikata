@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, Response
-from app.db_models import GeoFenceModel, GeoFenceCollection
+from app.db_models import GeoFenceModel, GeoFenceCollection, PyObjectId
 from app.database import db, find_user
 
 from bson import ObjectId
@@ -15,13 +15,13 @@ router = APIRouter()
 )
 async def get_geofences(user_name: str):
     if (
-        user := find_user(user_name)
+        user := await find_user(user_name)
     ) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_name}' not found.")
 
     geofence_ids = list(map(ObjectId, user["geofence_ids"]))
     geofences_cursor = db.geofences.find(
-        {"_id": {"$in": geofence_ids}}
+        { "_id": { "$in": geofence_ids } }
     )
     geofences = [geofence async for geofence in geofences_cursor]
     if geofences:
@@ -48,20 +48,18 @@ async def get_geofences(user_name: str):
     response_model_by_alias=False,
 )
 async def add_geofence(user_name: str, geofence: GeoFenceModel):
-    if (find_user(user_name)) is None:
+    if (await find_user(user_name)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_name}' not found.")
 
     new_geofence = await db.geofences.insert_one(
         geofence.model_dump(by_alias=True, exclude={"id"})
     )
     await db.users.update_one(
-        {"name": user_name},
-        {"$addToSet": {"geofence_ids": new_geofence.inserted_id}}
+        { "name": user_name },
+        { "$addToSet": { "geofence_ids": new_geofence.inserted_id } }
     )
-    created_geofence = await db.geofences.find_one(
-        {"_id": new_geofence.inserted_id}
-    )
-    return created_geofence
+    geofence.id = PyObjectId(new_geofence.inserted_id)
+    return geofence
 
 
 @router.delete(
@@ -70,10 +68,18 @@ async def add_geofence(user_name: str, geofence: GeoFenceModel):
     response_description="Delete a geofence.",
 )
 async def delete_geofences(geofence_name: str):
+    if (
+        geofence := await db.geofences.find_one({ "name": geofence_name })
+    ) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence {geofence_name} not found")
+
     delete_result = await db.geofences.delete_one(
         {"name": geofence_name}
     )
-    if delete_result.deleted_count == 1:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence {geofence_name} not found")
+    updated_user = await db.users.update_one(
+        { },
+        {
+            "$pull": { "geofence_ids": { "$in": [geofence.id] } }
+        }
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
