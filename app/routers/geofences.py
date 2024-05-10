@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
 from app.db_models import GeoFenceModel, GeoFenceCollection
-from app.database import db
+from app.database import db, find_user
 
 from bson import ObjectId
 
@@ -15,9 +15,9 @@ router = APIRouter()
 )
 async def get_geofences(user_name: str):
     if (
-        user := await db.users.find_one({"name": user_name})
+        user := find_user(user_name)
     ) is None:
-        raise HTTPException(status_code=404, detail=f"User '{user_name}' not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_name}' not found.")
 
     geofence_ids = list(map(ObjectId, user["geofence_ids"]))
     geofences_cursor = db.geofences.find(
@@ -27,7 +27,7 @@ async def get_geofences(user_name: str):
     if geofences:
         return GeoFenceCollection(geofences=geofences)
 
-    raise HTTPException(status_code=404, detail=f"Geofences not found for user '{user_name}'.")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofences not found for user '{user_name}'.")
 
 
 # @router.put(
@@ -48,10 +48,16 @@ async def get_geofences(user_name: str):
     response_model_by_alias=False,
 )
 async def add_geofence(user_name: str, geofence: GeoFenceModel):
+    if (find_user(user_name)) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_name}' not found.")
+
     new_geofence = await db.geofences.insert_one(
         geofence.model_dump(by_alias=True, exclude={"id"})
     )
-    # TODO: Update the 'user_name' user's 'geofence_ids' field to include the created geofence's id
+    await db.users.update_one(
+        {"name": user_name},
+        {"$addToSet": {"geofence_ids": new_geofence.inserted_id}}
+    )
     created_geofence = await db.geofences.find_one(
         {"_id": new_geofence.inserted_id}
     )
