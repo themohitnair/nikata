@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, Response
+from pydantic import BaseModel
 from app.db_models import GeoFenceModel, GeoFenceCollection, PyObjectId
 from app.database import db, find_user
 
@@ -62,24 +63,26 @@ async def add_geofence(user_name: str, geofence: GeoFenceModel):
     return geofence
 
 
+class DeleteRequestModel(BaseModel):
+    geofence_id: PyObjectId
+    user_name: str
+
+
 @router.delete(
-    "/geofences/{geofence_name}",
+    "/geofences/",
     tags=["geofences"],
     response_description="Delete a geofence.",
 )
-async def delete_geofences(geofence_name: str):
+async def delete_geofence(delete_deets: DeleteRequestModel):
     if (
-        geofence := await db.geofences.find_one({ "name": geofence_name })
+        geofence := await db.geofences.find_one_and_delete({ "_id": ObjectId(delete_deets.geofence_id) })
     ) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence {geofence_name} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence not found")
 
-    delete_result = await db.geofences.delete_one(
-        {"name": geofence_name}
-    )
-    updated_user = await db.users.update_one(
-        { },
+    await db.users.update_one(
+        { "name": delete_deets.user_name },
         {
-            "$pull": { "geofence_ids": { "$in": [geofence.id] } }
+            "$pull": { "geofence_ids": ObjectId(delete_deets.geofence_id) }
         }
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
