@@ -1,9 +1,17 @@
-from fastapi import APIRouter, status, HTTPException, Response
+from fastapi import (
+    APIRouter,
+    status,
+    HTTPException,
+)
 from pydantic import BaseModel
-from app.db_models import GeoFenceModel, GeoFenceCollection, PyObjectId
-from app.database import db, find_user
-
 from bson import ObjectId
+
+from app.db_models import (
+    GeoFenceModel,
+    GeoFenceCollection,
+    PyObjectId
+)
+from app.database import db, find_user
 
 router = APIRouter()
 
@@ -12,6 +20,7 @@ router = APIRouter()
     tags=["geofences"],
     response_description="Retrieve a user's geofences.",
     response_model=GeoFenceCollection,
+    status_code=status.HTTP_200_OK,
     response_model_by_alias=False,
 )
 async def get_geofences(user_name: str):
@@ -37,7 +46,7 @@ async def get_geofences(user_name: str):
 #     response_description="Update a geofence by name.",
 #     response_model=GeoFenceModel,
 # )
-# async
+# async def update_geofence()
 
 
 @router.post(
@@ -72,6 +81,7 @@ class DeleteRequestModel(BaseModel):
     "/geofences/",
     tags=["geofences"],
     response_description="Delete a geofence.",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_geofence(delete_deets: DeleteRequestModel):
     if (
@@ -85,4 +95,3 @@ async def delete_geofence(delete_deets: DeleteRequestModel):
             "$pull": { "geofence_ids": ObjectId(delete_deets.geofence_id) }
         }
     )
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
