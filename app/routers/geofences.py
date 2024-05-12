@@ -85,15 +85,15 @@ class DeleteRequestModel(BaseModel):
     response_description="Delete a geofence.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_geofence(delete_deets: DeleteRequestModel):
+async def delete_geofence(delete_payload: DeleteRequestModel):
     if (
-        await db.geofences.find_one_and_delete({ "_id": ObjectId(delete_deets.geofence_id) })
+        await db.geofences.find_one_and_delete({ "_id": ObjectId(delete_payload.geofence_id)})
     ) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence not found")
 
     await db.users.update_one(
-        { "name": delete_deets.user_name },
+        { "name": delete_payload.user_name},
         {
-            "$pull": { "geofence_ids": ObjectId(delete_deets.geofence_id) }
+            "$pull": { "geofence_ids": ObjectId(delete_payload.geofence_id)}
         }
     )

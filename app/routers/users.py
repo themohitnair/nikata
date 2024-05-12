@@ -17,9 +17,9 @@ router = APIRouter()
     response_model_by_alias=False,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_user(user_deets: UserModel):
+async def add_user(new_user_payload: UserModel):
     new_user = await db.users.insert_one(
-        user_deets.model_dump(by_alias=True, exclude={"id"})
+        new_user_payload.model_dump(by_alias=True, exclude={"id"})
     )
     created_user = await db.users.find_one(
         {"_id": new_user.inserted_id}

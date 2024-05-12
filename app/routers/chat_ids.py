@@ -13,7 +13,7 @@ from app.database import find_user
 
 router = APIRouter()
 
-class UpdateRequestModel(BaseModel):
+class ChatIDRequestModel(BaseModel):
     user_name: str
     chat_id: str
 
@@ -25,13 +25,13 @@ class UpdateRequestModel(BaseModel):
     response_model=UserModel,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_chat_id(update_deets: UpdateRequestModel):
-    if (await find_user(update_deets.user_name)) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{update_deets.user_name}' not found")
+async def add_chat_id(chatid_payload: ChatIDRequestModel):
+    if (await find_user(chatid_payload.user_name)) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{chatid_payload.user_name}' not found")
 
     updated_document = await db.users.find_one_and_update(
-        { "name": update_deets.user_name },
-        { "$addToSet": { "chat_ids": update_deets.chat_id } },
+        { "name": chatid_payload.user_name},
+        { "$addToSet": { "chat_ids": chatid_payload.chat_id}},
         return_document=ReturnDocument.AFTER
     )
     return updated_document
