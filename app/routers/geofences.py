@@ -87,7 +87,7 @@ class DeleteRequestModel(BaseModel):
 )
 async def delete_geofence(delete_deets: DeleteRequestModel):
     if (
-        geofence := await db.geofences.find_one_and_delete({ "_id": ObjectId(delete_deets.geofence_id) })
+        await db.geofences.find_one_and_delete({ "_id": ObjectId(delete_deets.geofence_id) })
     ) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence not found")
 

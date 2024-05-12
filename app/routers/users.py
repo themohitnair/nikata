@@ -2,8 +2,8 @@ from fastapi import (
     APIRouter,
     status,
     HTTPException,
-    Response
 )
+
 from app.database import db
 from app.db_models import UserModel
 
