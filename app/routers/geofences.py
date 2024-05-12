@@ -2,6 +2,7 @@ from fastapi import (
     APIRouter,
     status,
     HTTPException,
+    Response,
 )
 from pydantic import BaseModel
 from bson import ObjectId
@@ -9,7 +10,7 @@ from bson import ObjectId
 from app.db_models import (
     GeoFenceModel,
     GeoFenceCollection,
-    PyObjectId
+    PyObjectId,
 )
 from app.database import db, find_user
 
@@ -20,8 +21,8 @@ router = APIRouter()
     tags=["geofences"],
     response_description="Retrieve a user's geofences.",
     response_model=GeoFenceCollection,
-    status_code=status.HTTP_200_OK,
     response_model_by_alias=False,
+    status_code=status.HTTP_200_OK
 )
 async def get_geofences(user_name: str):
     if (
@@ -34,10 +35,10 @@ async def get_geofences(user_name: str):
         { "_id": { "$in": geofence_ids } }
     )
     geofences = [geofence async for geofence in geofences_cursor]
-    if geofences:
-        return GeoFenceCollection(geofences=geofences)
+    if not geofences:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofences not found for user '{user_name}'.")
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofences not found for user '{user_name}'.")
+    return GeoFenceCollection(geofences=geofences)
 
 
 # @router.put(
@@ -54,20 +55,21 @@ async def get_geofences(user_name: str):
     tags=["geofences"],
     response_description="Add a new geofence.",
     response_model=GeoFenceModel,
-    status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False,
+    status_code=status.HTTP_201_CREATED
 )
-async def add_geofence(user_name: str, geofence: GeoFenceModel):
+async def add_geofence(user_name: str, geofence: GeoFenceModel, response: Response):
     if (await find_user(user_name)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_name}' not found.")
 
     new_geofence = await db.geofences.insert_one(
         geofence.model_dump(by_alias=True, exclude={"id"})
     )
-    await db.users.update_one(
+    update_result = await db.users.update_one(
         { "name": user_name },
         { "$addToSet": { "geofence_ids": new_geofence.inserted_id } }
     )
+
     geofence.id = PyObjectId(new_geofence.inserted_id)
     return geofence
 
