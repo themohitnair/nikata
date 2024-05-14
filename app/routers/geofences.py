@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get(
     "/geofences/{user_name}",
     tags=["geofences"],
-    response_description="Retrieve a user's geofences.",
+    response_description="Retrieved geofences",
     response_model=GeoFenceCollection,
     response_model_by_alias=False,
     status_code=status.HTTP_200_OK
@@ -53,7 +53,7 @@ async def get_geofences(user_name: str):
 @router.post(
     "/geofences/{user_name}",
     tags=["geofences"],
-    response_description="Add a new geofence.",
+    response_description="The new geofence",
     response_model=GeoFenceModel,
     response_model_by_alias=False,
     status_code=status.HTTP_201_CREATED
@@ -82,7 +82,6 @@ class DeleteRequestModel(BaseModel):
 @router.delete(
     "/geofences/",
     tags=["geofences"],
-    response_description="Delete a geofence.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_geofence(delete_payload: DeleteRequestModel):

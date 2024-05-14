@@ -18,7 +18,7 @@ class UserModel(BaseModel):
     id: PyObjectId | None = Field(alias="_id", default=None)
     name: str
     email: EmailStr
-    chat_ids: list[str]
+    chat_ids: list[int]
     geofence_ids: list[PyObjectId]
 
 class GeoJSONPoint(BaseModel):
