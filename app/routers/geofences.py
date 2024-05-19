@@ -41,15 +41,6 @@ async def get_geofences(user_name: str):
     return GeoFenceCollection(geofences=geofences)
 
 
-# @router.put(
-#     "/geofences/{geofence_name}",
-#     tags=["geofences"],
-#     response_description="Update a geofence by name.",
-#     response_model=GeoFenceModel,
-# )
-# async def update_geofence()
-
-
 @router.post(
     "/geofences/{user_name}",
     tags=["geofences"],
@@ -76,7 +67,7 @@ async def add_geofence(user_name: str, geofence: GeoFenceModel, response: Respon
 
 class DeleteRequestModel(BaseModel):
     geofence_id: PyObjectId
-    user_name: str
+    user_id: PyObjectId
 
 
 @router.delete(
@@ -91,8 +82,8 @@ async def delete_geofence(delete_payload: DeleteRequestModel):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Geofence not found")
 
     await db.users.update_one(
-        { "name": delete_payload.user_name},
+        { "_id": ObjectId(delete_payload.user_id) },
         {
-            "$pull": { "geofence_ids": ObjectId(delete_payload.geofence_id)}
+            "$pull": { "geofence_ids": ObjectId(delete_payload.geofence_id) }
         }
     )
