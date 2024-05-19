@@ -9,7 +9,7 @@ from typing import Literal, List
 from bson import ObjectId
 from pymongo import ReturnDocument
 
-from app.database import db, client
+from app.database import db
 from app.db_models import UserModel, PyObjectId
 
 router = APIRouter()
