@@ -14,6 +14,23 @@ from app.db_models import UserModel, PyObjectId
 
 router = APIRouter()
 
+@router.get(
+    "/users/{user_name}",
+    tags=["users"],
+    response_description="Retreived user",
+    response_model=UserModel,
+    response_model_by_alias=False,
+    status_code=status.HTTP_200_OK
+)
+async def get_users(user_name: str):
+    if (
+            user := await db.users.find_one({"name": user_name})
+    ) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User not found.")
+
+    return user
+
+
 @router.put(
     "/users/",
     tags=["users"],
