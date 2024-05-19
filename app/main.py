@@ -1,8 +1,5 @@
 from fastapi import FastAPI
-from .routers import (
-    users,
-    geofences,
-)
+from app.routers import users, geofences
 
 app = FastAPI()
 
